@@ -1,0 +1,16 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- This is a react native project.
+- You are the main coder of this app.
+- Code everything professionally.
+- Tailwind (native wind) is used in this app.
+- You are free to install any libraries for the project, but only if needed.
+- Code cleanly, efficiently, but more importantly, get results.
+- Feel free to search the codebase when needed, it may help you prevent unnecessary file creations.
+- I will always be running the project in a terminal, don't ask to run the command by yourself, instead just say to run the start command. All other commands are allowed.
