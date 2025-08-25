@@ -1,9 +1,14 @@
 {
   "expo": {
-    "name": "my-expo-app",
-    "slug": "my-expo-app",
+    "name": "BankrAI",
+    "slug": "bankrai-mobile",
     "version": "1.0.0",
+    "scheme": "bankrai",
     "newArchEnabled": true,
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },
@@ -25,12 +30,25 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.bankrai.mobile",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.bankrai.mobile",
+      "versionCode": 1
+    },
+    "extra": {
+      "eas": {
+        "projectId": "42229d9d-433e-4278-9086-acfdef7c94c5"
+      },
+      "apiUrl": "http://localhost:3000/api",
+      "router": {
+        "origin": false
       }
     }
   }

@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Animated, ActivityIndicator, useColorScheme, RefreshControl } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Animated, ActivityIndicator, useColorScheme, RefreshControl, KeyboardAvoidingView, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MainStackParamList } from '../../types/navigation';
 import { useState, useRef, useEffect } from 'react';
@@ -41,6 +41,9 @@ export const ChatScreen = ({ navigation }: Props) => {
   const stripe = useStripe();
   const [error, setError] = useState('');
   const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
+
+  // Ref for scrolling to bottom when new messages arrive
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const markdownStyles = {
     body: {
@@ -132,12 +135,21 @@ export const ChatScreen = ({ navigation }: Props) => {
     ]).start();
   }, [isSidebarOpen]);
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (selectedChat?.messages && selectedChat.messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
+  }, [selectedChat?.messages]);
+
   const fetchChats = async () => {
     try {
       setIsFetchingChats(true);
       const fetchedChats = await chatService.getChats();
       // Sort chats by createdAt in descending order (newest first)
-      const sortedChats = fetchedChats.sort((a, b) => 
+      const sortedChats = fetchedChats.sort((a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
       setChats(sortedChats);
@@ -183,7 +195,8 @@ export const ChatScreen = ({ navigation }: Props) => {
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedChat) return;
-  console.log("user:", user)
+    console.log("user:", user)
+
     // Check if user has reached message limit before sending
     if (!user?.hasPaidAccess && user?.messageCount! >= 2) {
       setShowSubscriptionOverlay(true);
@@ -227,15 +240,15 @@ export const ChatScreen = ({ navigation }: Props) => {
       });
 
       // Update chats list with both messages
-      setChats(prev => prev.map(chat => 
-        chat.id === selectedChat.id 
+      setChats(prev => prev.map(chat =>
+        chat.id === selectedChat.id
           ? { ...chat, messages: [...(chat.messages || []), userMessage, loadingMessage] }
           : chat
       ));
 
       // Send message to backend
       const response = await chatService.sendMessage(selectedChat.id, messageContent);
-      
+
       if (response) {
         // Replace loading message with actual response
         setSelectedChat(prev => {
@@ -248,8 +261,8 @@ export const ChatScreen = ({ navigation }: Props) => {
         });
 
         // Update chats list with actual response
-        setChats(prev => prev.map(chat => 
-          chat.id === selectedChat.id 
+        setChats(prev => prev.map(chat =>
+          chat.id === selectedChat.id
             ? {
                 ...chat,
                 messages: (chat.messages || []).filter(msg => !msg.id.startsWith('loading-')).concat(response)
@@ -270,8 +283,8 @@ export const ChatScreen = ({ navigation }: Props) => {
           messages: prev.messages?.filter(msg => !msg.id.startsWith('loading-')) || []
         };
       });
-      setChats(prev => prev.map(chat => 
-        chat.id === selectedChat.id 
+      setChats(prev => prev.map(chat =>
+        chat.id === selectedChat.id
           ? {
               ...chat,
               messages: (chat.messages || []).filter(msg => !msg.id.startsWith('loading-'))
@@ -305,9 +318,9 @@ export const ChatScreen = ({ navigation }: Props) => {
 
       // Create Plaid instance with minimal config
       create({
-        token: token, 
-        logLevel: LinkLogLevel.ERROR, 
-        noLoadingState: false, 
+        token: token,
+        logLevel: LinkLogLevel.ERROR,
+        noLoadingState: false,
       });
       console.log('Plaid instance created');
       setIsPlaidReady(true);
@@ -351,10 +364,10 @@ export const ChatScreen = ({ navigation }: Props) => {
 
       console.log('Plaid success:', success);
       setIsPlaidConnecting(true);
-      
+
       // Exchange the public token
       await exchangePublicToken(success.publicToken, user.id, success.metadata.institution?.id || '');
-      
+
       // Fetch Plaid data and wait for it to complete
       try {
         await authService.fetchPlaidData();
@@ -366,7 +379,7 @@ export const ChatScreen = ({ navigation }: Props) => {
         await authService.fetchPlaidData();
         console.log('Retry Plaid data fetch completed');
       }
-      
+
       setIsPlaidConnected(true);
       setIsPlaidConnecting(false);
       const successChat: Chat = {
@@ -469,7 +482,11 @@ export const ChatScreen = ({ navigation }: Props) => {
       publishableKey={process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY!}
       urlScheme="bankrai"
     >
-      <View className="flex-1 bg-background dark:bg-dark-background">
+      <KeyboardAvoidingView
+        className="flex-1 bg-background dark:bg-dark-background"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
+      >
         {showSubscriptionOverlay && (
           <View className="absolute inset-0 bg-black/80 z-50 items-center justify-center p-6">
             <View className="bg-white dark:bg-dark-surface rounded-lg p-6 w-full max-w-md">
@@ -517,7 +534,7 @@ export const ChatScreen = ({ navigation }: Props) => {
           </View>
         )}
 
-        <View 
+        <View
           className="px-4 flex-row items-center justify-between border-b border-gray-200 dark:border-gray-700"
           style={{ paddingTop: insets.top }}
         >
@@ -525,19 +542,19 @@ export const ChatScreen = ({ navigation }: Props) => {
             className="p-2"
             onPress={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            <Ionicons 
-              name={isSidebarOpen ? "close" : "menu"} 
-              size={24} 
-              color="#007AFF" 
+            <Ionicons
+              name={isSidebarOpen ? "close" : "menu"}
+              size={24}
+              color="#007AFF"
             />
           </TouchableOpacity>
           <Text className="text-xl font-bold text-primary dark:text-dark-primary">
-            Chat
+            Bankr AI
           </Text>
           <View className="w-10" />
         </View>
 
-        <Animated.View 
+        <Animated.View
           className="absolute top-0 left-0 h-full w-72 bg-white dark:bg-dark-surface border-r border-gray-200 dark:border-gray-700 z-20"
           style={{
             transform: [{ translateX: sidebarAnim }],
@@ -552,7 +569,7 @@ export const ChatScreen = ({ navigation }: Props) => {
             </View>
 
             <View className="p-4 border-b border-gray-200 dark:border-gray-700 gap-y-2">
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="border border-gray-200 dark:border-gray-700 rounded-md p-3 flex-row items-center justify-start"
                 onPress={async () => {
                   try {
@@ -570,7 +587,7 @@ export const ChatScreen = ({ navigation }: Props) => {
                 <Text className={`${isPlaidConnected ? "text-primary dark:text-dark-primary" : "text-gray-400 dark:text-gray-600"}`}>New Chat</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="border border-gray-200 dark:border-gray-700 rounded-md p-3 flex-row items-center justify-start"
                 onPress={onRefresh}
                 disabled={!isPlaidConnected || isRefreshing}
@@ -633,7 +650,7 @@ export const ChatScreen = ({ navigation }: Props) => {
         </Animated.View>
 
         {isSidebarOpen && (
-          <TouchableOpacity 
+          <TouchableOpacity
             className="absolute top-0 left-0 right-0 bottom-0 bg-black/75 z-10"
             style={{
               opacity: overlayAnim,
@@ -644,10 +661,10 @@ export const ChatScreen = ({ navigation }: Props) => {
         )}
 
         {notification && (
-          <Animated.View 
+          <Animated.View
             className={`absolute top-0 left-0 right-0 z-30 p-4 ${
-              notification.type === 'success' 
-                ? 'bg-green-500 dark:bg-green-600' 
+              notification.type === 'success'
+                ? 'bg-green-500 dark:bg-green-600'
                 : 'bg-red-500 dark:bg-red-600'
             }`}
             style={{
@@ -692,8 +709,8 @@ export const ChatScreen = ({ navigation }: Props) => {
                       if (isPlaidReady) {
                         console.log('Opening Plaid Link...');
                         setIsPlaidConnecting(true);
-                        open({ 
-                          iOSPresentationStyle: LinkIOSPresentationStyle.MODAL, 
+                        open({
+                          iOSPresentationStyle: LinkIOSPresentationStyle.MODAL,
                           onSuccess: handleSuccess,
                           onExit: handleExit,
                         });
@@ -702,12 +719,12 @@ export const ChatScreen = ({ navigation }: Props) => {
                     disabled={!isPlaidReady || isLoading || isPlaidConnecting}
                   >
                     <Text className="text-white dark:text-black text-lg font-medium">
-                      {isLoading 
-                        ? 'Loading...' 
-                        : isPlaidReady 
+                      {isLoading
+                        ? 'Loading...'
+                        : isPlaidReady
                         ? isPlaidConnecting
                           ? 'Connecting...'
-                          : 'Connect Bank Account' 
+                          : 'Connect Bank Account'
                         : 'Initializing...'}
                     </Text>
                   </TouchableOpacity>
@@ -722,7 +739,8 @@ export const ChatScreen = ({ navigation }: Props) => {
         ) : (
           <>
             <View className="flex-1">
-              <ScrollView 
+              <ScrollView
+                ref={scrollViewRef}
                 className="flex-1 p-4"
                 contentContainerStyle={{ paddingBottom: 20 }}
                 refreshControl={
@@ -734,6 +752,7 @@ export const ChatScreen = ({ navigation }: Props) => {
                     progressBackgroundColor={isDarkMode ? "#1F2937" : "#FFFFFF"}
                   />
                 }
+                showsVerticalScrollIndicator={false}
               >
                 {selectedChat && selectedChat.messages && selectedChat.messages.length > 0 ? (
                   selectedChat.messages.map((message) => (
@@ -757,7 +776,7 @@ export const ChatScreen = ({ navigation }: Props) => {
                         ) : message.id.startsWith('loading-') ? (
                           <ActivityIndicator size="small" color="#007AFF" />
                         ) : (
-                          <Markdown 
+                          <Markdown
                             style={markdownStyles}
                           >
                             {message.content}
@@ -778,33 +797,56 @@ export const ChatScreen = ({ navigation }: Props) => {
                 )}
               </ScrollView>
 
-              <View 
-                className="border-t border-gray-200 dark:border-gray-700 p-2 mb-2"
+              <View
+                className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-dark-background"
                 style={{ paddingBottom: insets.bottom }}
               >
-                <View className="flex-row items-center">
-                  <TextInput
-                    className="flex-1 border border-gray-200 dark:border-gray-700 rounded-md px-4 mr-2
-                      text-primary dark:text-dark-primary bg-white dark:bg-dark-surface"
-                    placeholder="Type your message..."
-                    placeholderTextColor="#666666"
-                    value={newMessage}
-                    onChangeText={setNewMessage}
-                    multiline
-                    style={{ minHeight: 40, maxHeight: 120, textAlignVertical: 'top', paddingTop: 10, paddingBottom: 10 }}
-                    editable={!isSendingMessage}
-                  />
+                <View className="p-4 flex-row items-end">
+                  <View className="flex-1 mr-2">
+                    <TextInput
+                      className="border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3
+                        text-primary dark:text-dark-primary bg-white dark:bg-dark-surface
+                        text-base leading-5"
+                      placeholder="Type your message..."
+                      placeholderTextColor="#666666"
+                      value={newMessage}
+                      onChangeText={setNewMessage}
+                      multiline
+                      maxLength={1000}
+                      style={{
+                        minHeight: 44,
+                        maxHeight: 120,
+                        textAlignVertical: 'top',
+                        paddingTop: 12,
+                        paddingBottom: 12
+                      }}
+                      editable={!isSendingMessage}
+                      returnKeyType="send"
+                      onSubmitEditing={() => {
+                        if (newMessage.trim() && !isSendingMessage) {
+                          handleSendMessage();
+                        }
+                      }}
+                      blurOnSubmit={false}
+                    />
+                  </View>
                   <TouchableOpacity
-                    className={`px-4 h-full rounded-md flex-row items-center justify-center ${
-                      isSendingMessage ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary dark:bg-dark-primary'
+                    className={`w-11 h-11 rounded-xl items-center justify-center ${
+                      isSendingMessage || !newMessage.trim()
+                        ? 'bg-gray-300 dark:bg-gray-600'
+                        : 'bg-primary dark:bg-dark-primary'
                     }`}
                     onPress={handleSendMessage}
-                    disabled={isSendingMessage}
+                    disabled={isSendingMessage || !newMessage.trim()}
                   >
                     {isSendingMessage ? (
                       <ActivityIndicator size="small" color={isDarkMode ? "black" : "white"} />
                     ) : (
-                      <MaterialIcons name="send" size={20} color={isDarkMode ? "black" : "white"} />
+                      <MaterialIcons
+                        name="send"
+                        size={20}
+                        color={!newMessage.trim() ? "#999" : (isDarkMode ? "black" : "white")}
+                      />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -812,7 +854,7 @@ export const ChatScreen = ({ navigation }: Props) => {
             </View>
           </>
         )}
-      </View>
+      </KeyboardAvoidingView>
     </StripeProvider>
   );
-}; 
+};
