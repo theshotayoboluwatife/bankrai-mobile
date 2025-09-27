@@ -250,12 +250,35 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
         error.response?.data?.message || 
         error.message || 
         'Failed to cancel subscription. Please try again.'
       );
     }
-  }
-}; 
+  },
+
+ async syncIAPSubscription(userData: Partial<User>): Promise<void> {
+   try {
+       const user = await authService.getCurrentUser();
+    const response = await api.post(`/users/${user.id}/sync-iap-subscription`);
+    console.log(response.status);
+    console.log(response.data);
+     return response.data;
+   } catch (error: any) {
+     console.error('Sync IAP subscription error:', {
+       status: error.response?.status,
+       data: error.response?.data,
+       message: error.message
+     });
+
+     throw new Error(
+       error.response?.data?.message ||
+       error.message ||
+       'Failed to sync IAP subscription. Please try again.'
+     );
+   }
+ }
+
+};

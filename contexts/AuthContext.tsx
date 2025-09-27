@@ -1,6 +1,9 @@
+// contexts/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authService, User } from '../services/auth';
+import { adaptyService } from '../services/adapty';
+import { Platform } from 'react-native';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -9,6 +12,8 @@ interface AuthContextType {
   logout: () => Promise<void>;
   refreshUser: () => Promise<User>;
   isLoading: boolean;
+  isSubscribed: boolean;
+  refreshSubscription: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,9 +22,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    const init = async () => {
+      //await adaptyService.initialize();
+      await checkAuth();
+      await refreshSubscription();
+    };
+    init();
   }, []);
 
   const checkAuth = async () => {
@@ -40,25 +51,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async (): Promise<User> => {
     try {
-      console.log("Refreshing user data")
       const token = await AsyncStorage.getItem('auth_token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
+      if (!token) throw new Error('No authentication token found');
       const userData = await authService.getProfile();
-      console.log('Refreshed user data:', userData);
-      
-      if (!userData) {
-        throw new Error('Failed to fetch user data');
-      }
-
       setUser(userData);
       setIsAuthenticated(true);
       return userData;
     } catch (error) {
       console.error('Error refreshing user data:', error);
-      // If there's an authentication error, clear the state
       if (error instanceof Error && error.message.includes('authentication')) {
         await AsyncStorage.removeItem('auth_token');
         setUser(null);
@@ -68,12 +68,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+const refreshSubscription = async (): Promise<boolean> => {
+  try {
+    // First check: Always refresh user data to get latest database status
+    console.log('[Auth] Refreshing user data...');
+    const updatedUser = await refreshUser(); // Get the return value directly
+
+
+    if (updatedUser?.hasPaidAccess) {
+      // User has active subscription in database (could be from Stripe or previous IAP)
+      console.log('[Auth] Active subscription found in database');
+      setIsSubscribed(true);
+      return true;
+    }
+
+    // Only check Adapty if no database subscription AND on iOS
+    if (Platform.OS === 'ios') {
+      console.log('[Auth] No database subscription, checking Adapty for iOS IAP...');
+      const adaptySubscribed = await adaptyService.isSubscribed();
+
+      if (adaptySubscribed) {
+        // Found active IAP, sync it to database
+        console.log('[Auth] Active IAP found, syncing to database...');
+        try {
+          await authService.syncIAPSubscription();
+          const syncedUser = await refreshUser(); // Refresh again after sync
+          setIsSubscribed(true);
+          return true;
+        } catch (syncError) {
+          console.error('[Auth] Failed to sync IAP subscription:', syncError);
+          // Even if sync fails, we know there's an active IAP
+          setIsSubscribed(false);
+          return false;
+        }
+      }
+    }
+
+    // No active subscription found anywhere
+    console.log('[Auth] No active subscription found anywhere');
+    setIsSubscribed(false);
+    return false;
+  } catch (error) {
+    console.error('[Auth] Error checking subscription status:', error);
+    setIsSubscribed(false);
+    return false;
+  }
+};
+
   const login = async (token: string) => {
     try {
       await AsyncStorage.setItem('auth_token', token);
       const userData = await authService.getProfile();
       setUser(userData);
       setIsAuthenticated(true);
+      await refreshSubscription();
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -85,16 +133,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await authService.logout();
       setUser(null);
       setIsAuthenticated(false);
+      setIsSubscribed(false);
     } catch (error) {
       console.error('Logout error:', error);
-      // Still clear the state even if storage fails
       setUser(null);
       setIsAuthenticated(false);
+      setIsSubscribed(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout, refreshUser, isLoading }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        login,
+        logout,
+        refreshUser,
+        isLoading,
+        isSubscribed,
+        refreshSubscription,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -102,8 +162,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
-}; 
+};

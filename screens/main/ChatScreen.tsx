@@ -198,7 +198,8 @@ export const ChatScreen = ({ navigation }: Props) => {
     console.log("user:", user)
 
     // Check if user has reached message limit before sending
-    if (!user?.hasPaidAccess && user?.messageCount! >= 2) {
+    const hasActiveSubscription = user?.hasPaidAccess || isSubscribed;
+    if (!hasActiveSubscription && user?.messageCount! >= 2) {
       setShowSubscriptionOverlay(true);
       return;
     }
@@ -514,6 +515,7 @@ export const ChatScreen = ({ navigation }: Props) => {
                 }}
                 onError={(error) => {
                   showNotification(error.message, 'error');
+
                 }}
               />
               <TouchableOpacity
