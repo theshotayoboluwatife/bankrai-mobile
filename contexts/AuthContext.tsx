@@ -26,7 +26,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const init = async () => {
-      //await adaptyService.initialize();
       await checkAuth();
       await refreshSubscription();
     };
@@ -70,25 +69,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 const refreshSubscription = async (): Promise<boolean> => {
   try {
-    // First check: Always refresh user data to get latest database status
     console.log('[Auth] Refreshing user data...');
     const updatedUser = await refreshUser(); // Get the return value directly
 
 
     if (updatedUser?.hasPaidAccess) {
-      // User has active subscription in database (could be from Stripe or previous IAP)
       console.log('[Auth] Active subscription found in database');
       setIsSubscribed(true);
       return true;
     }
 
-    // Only check Adapty if no database subscription AND on iOS
     if (Platform.OS === 'ios') {
       console.log('[Auth] No database subscription, checking Adapty for iOS IAP...');
       const adaptySubscribed = await adaptyService.isSubscribed();
 
       if (adaptySubscribed) {
-        // Found active IAP, sync it to database
+
         console.log('[Auth] Active IAP found, syncing to database...');
         try {
           await authService.syncIAPSubscription();
@@ -97,7 +93,7 @@ const refreshSubscription = async (): Promise<boolean> => {
           return true;
         } catch (syncError) {
           console.error('[Auth] Failed to sync IAP subscription:', syncError);
-          // Even if sync fails, we know there's an active IAP
+
           setIsSubscribed(false);
           return false;
         }

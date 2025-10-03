@@ -58,7 +58,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
         throw new Error('No subscription plans available. Please try again later.');
       }
 
-      // Use the first (and only) product
+
       const selectedProduct = products[0];
 
       console.log('[Payment] Processing payment...');
@@ -73,7 +73,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
       console.log('[Payment] Updating account...');
       setHasActiveSubscription(true);
       await refreshUser();
-      await refreshSubscription(); // Also refresh the centralized subscription state
+      await refreshSubscription();
       onSuccess?.();
     } catch (error: any) {
       console.error('[Payment] Adapty purchase error:', error);
@@ -106,7 +106,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
       }
 
       await Linking.openURL(url);
-      // Note: For Stripe web checkout, success handling typically happens via webhook/redirect
+
     } catch (error) {
       console.error('[Payment] Stripe checkout error:', error);
       throw error;
@@ -149,8 +149,8 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
     try {
       setIsRefreshing(true);
       await refreshUser();
-      await refreshSubscription(); // Use centralized subscription refresh
-      //onSuccess?.();
+      await refreshSubscription();
+
     } catch (error) {
       console.error('[Payment] Refresh failed:', error);
       onError?.(error instanceof Error ? error : new Error('Failed to refresh subscription status'));
