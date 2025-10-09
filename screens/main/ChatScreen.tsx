@@ -40,7 +40,7 @@ export const ChatScreen = ({ navigation }: Props) => {
   const notificationAnim = useRef(new Animated.Value(0)).current;
   const stripe = useStripe();
   const [error, setError] = useState('');
-  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(true);
+  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
 
   // Ref for scrolling to bottom when new messages arrive
   const scrollViewRef = useRef<ScrollView>(null);
