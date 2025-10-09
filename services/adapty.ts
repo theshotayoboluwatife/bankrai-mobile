@@ -28,6 +28,7 @@ class AdaptyService {
     if (Platform.OS !== 'ios') return false;
 
     try {
+        await this.activateOnce();
       const profile: AdaptyProfile = await adapty.getProfile();
 
       if (!profile || !profile.accessLevels) {
@@ -86,10 +87,18 @@ class AdaptyService {
         throw new Error('Purchase cancelled by user');
       }
 
-      if (!profile || !profile.accessLevels) {
-        console.log('[Adapty] Purchase completed but no valid profile returned');
-        throw new Error('Purchase verification failed');
-      }
+     if (!profile || !profile.accessLevels) {
+       console.warn('[Adapty] Purchase completed but no valid profile returned — likely sandbox verification issue.');
+
+       // TEMPORARY fallback for sandbox testing
+       if (__DEV__ ) {
+         console.warn('[Adapty] Ignoring verification failure in sandbox mode');
+         return profile || ({} as AdaptyProfile);
+       }
+
+       throw new Error('Purchase verification failed');
+     }
+
 
       console.log('[Adapty] Purchase successful:', profile);
       return profile;

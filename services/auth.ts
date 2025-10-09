@@ -64,10 +64,10 @@ export const authService = {
     } catch (error: any) {
       console.log('login', error);
       console.error('Login error:', error.response?.status, error.response?.data, error.message);
-      
+
       throw new Error(
-        error.response?.status || 
-        error.message || 
+        error.response?.status ||
+        error.message ||
         'Failed to login. Please check your credentials and try again.'
       );
     }
@@ -79,18 +79,18 @@ export const authService = {
       const response = await api.post<AuthResponse>('/auth/signup', data);
       return response.data;
     } catch (error: any) {
-      
+
       console.log('signup', error);
-      
+
       console.error('Signup error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to create account. Please try again.'
       );
     }
@@ -111,6 +111,7 @@ export const authService = {
   async getProfile(): Promise<AuthResponse['user']> {
     try {
       const response = await api.get<AuthResponse['user']>('/users/me');
+      console.log('profile teurned', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Get profile error:', {
@@ -118,10 +119,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to fetch profile. Please try again.'
       );
     }
@@ -137,10 +138,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to fetch user. Please try again.'
       );
     }
@@ -155,10 +156,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to delete account. Please try again.'
       );
     }
@@ -174,10 +175,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to fetch current user. Please try again.'
       );
     }
@@ -193,15 +194,15 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to update user. Please try again.'
       );
     }
   },
-  
+
   async fetchPlaidData(): Promise<void> {
     try {
       const response = await api.get('/plaid/fetch');
@@ -212,10 +213,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
-      throw new Error(  
-        error.response?.data?.message || 
-        error.message || 
+
+      throw new Error(
+        error.response?.data?.message ||
+        error.message ||
         'Failed to fetch Plaid data. Please try again.'
       );
     }
@@ -230,10 +231,10 @@ export const authService = {
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to disconnect Plaid. Please try again.'
       );
     }
@@ -252,8 +253,8 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Failed to cancel subscription. Please try again.'
       );
     }

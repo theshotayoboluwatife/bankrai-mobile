@@ -72,7 +72,6 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
 
       console.log('[Payment] Updating account...');
       setHasActiveSubscription(true);
-      await refreshUser();
       await refreshSubscription();
       onSuccess?.();
     } catch (error: any) {
@@ -149,7 +148,7 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
     try {
       setIsRefreshing(true);
       await refreshUser();
-      await refreshSubscription();
+      await checkSubscriptionStatus();
 
     } catch (error) {
       console.error('[Payment] Refresh failed:', error);
