@@ -28,10 +28,11 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
     checkSubscriptionStatus();
   }, []);
 
+
   const checkSubscriptionStatus = useCallback(async () => {
     try {
       setIsCheckingSubscription(true);
-      // Use the centralized subscription check from AuthContext
+
       await refreshSubscription();
 
      setHasActiveSubscription(user?.hasPaidAccess || isSubscribed);
@@ -136,11 +137,13 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
       } else {
         await handleStripePurchase();
       }
+   onSuccess?.();
     } catch (error) {
       console.error('[Payment] Payment failed:', error);
       onError?.(error instanceof Error ? error : new Error('Payment failed'));
     } finally {
       setIsLoading(false);
+
     }
   };
 
@@ -169,56 +172,45 @@ export const PaymentSheet: React.FC<PaymentSheetProps> = ({
     );
   }
 
-  return (
-    <View className="p-4 gap-y-4">
-      {hasActiveSubscription ? (
-        <View className="bg-green-100 dark:bg-green-900 rounded-lg p-4 items-center">
-          <Ionicons name="checkmark-circle" size={24} color="green" />
-          <Text className="text-green-800 dark:text-green-200 text-lg font-medium mt-2">
-            Subscription Active
-          </Text>
-          <Text className="text-green-600 dark:text-green-300 text-sm mt-1 text-center">
-            You have access to all premium features
-          </Text>
-        </View>
-      ) : (
-        <View className="gap-y-2">
-          <TouchableOpacity
-            className="bg-primary dark:bg-dark-primary rounded-lg p-4 items-center justify-center"
-            onPress={handlePayment}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator size="small" color="blue" />
-            ) : (
-              <Text className="text-white dark:text-black text-lg font-medium">
-                {Platform.OS === 'ios' ? 'Subscribe with App Store' : 'Subscribe with Stripe'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      )}
+ return (
+   <View className="p-4 gap-y-4">
+     <View className="gap-y-2">
+       <TouchableOpacity
+         className="bg-primary dark:bg-dark-primary rounded-lg p-4 items-center justify-center"
+         onPress={handlePayment}
+         disabled={isLoading}
+       >
+         {isLoading ? (
+           <ActivityIndicator size="small" color="blue" />
+         ) : (
+           <Text className="text-white dark:text-black text-lg font-medium">
+             {Platform.OS === 'ios'
+               ? 'Subscribe with App Store'
+               : 'Subscribe with Stripe'}
+           </Text>
+         )}
+       </TouchableOpacity>
+     </View>
 
-      <View className="gap-y-2">
-        <TouchableOpacity
-          className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 items-center flex-row justify-center space-x-2"
-          onPress={handleRefresh}
-          disabled={isRefreshing || isLoading}
-        >
-          {isRefreshing ? (
-            <ActivityIndicator size="small" color="gray" />
-          ) : (
-            <>
-              <Ionicons name="refresh" size={20} color="gray" />
-              <Text className="text-gray-600 dark:text-gray-300 text-base">
-                Refresh Status
-              </Text>
-            </>
-          )}
-        </TouchableOpacity>
+     <View className="gap-y-2">
+       <TouchableOpacity
+         className="bg-gray-200 dark:bg-gray-700 rounded-lg p-4 items-center flex-row justify-center space-x-2"
+         onPress={handleRefresh}
+         disabled={isRefreshing || isLoading}
+       >
+         {isRefreshing ? (
+           <ActivityIndicator size="small" color="gray" />
+         ) : (
+           <>
+             <Ionicons name="refresh" size={20} color="gray" />
+             <Text className="text-gray-600 dark:text-gray-300 text-base">
+               Refresh Status
+             </Text>
+           </>
+         )}
+       </TouchableOpacity>
+     </View>
+   </View>
+ );
 
-
-      </View>
-    </View>
-  );
 };

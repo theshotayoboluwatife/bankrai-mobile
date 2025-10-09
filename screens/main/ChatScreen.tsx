@@ -40,7 +40,7 @@ export const ChatScreen = ({ navigation }: Props) => {
   const notificationAnim = useRef(new Animated.Value(0)).current;
   const stripe = useStripe();
   const [error, setError] = useState('');
-  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(false);
+  const [showSubscriptionOverlay, setShowSubscriptionOverlay] = useState(true);
 
   // Ref for scrolling to bottom when new messages arrive
   const scrollViewRef = useRef<ScrollView>(null);
@@ -490,15 +490,6 @@ export const ChatScreen = ({ navigation }: Props) => {
       {showSubscriptionOverlay && (
         <View className="absolute inset-0 bg-black/80 z-50 items-center justify-center p-6">
           <View className="bg-white dark:bg-dark-surface rounded-lg w-full max-w-md relative">
-            {/* Close Button */}
-            <TouchableOpacity
-              onPress={() => setShowSubscriptionOverlay(false)}
-              className="absolute top-4 right-4 z-10 rounded-full p-2"
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons name="close" size={24} color="gray" />
-            </TouchableOpacity>
-
             <View className="p-6 pt-12">
               <View className="items-center mb-6">
                 <View className="w-16 h-16 rounded-full bg-red-500 items-center justify-center mb-4">
