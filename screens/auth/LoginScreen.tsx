@@ -6,6 +6,7 @@ import { Button } from '../../components/Button';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth';
 import { useState } from 'react';
+import { getDisplayError } from '~/utils/error';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 
@@ -47,7 +48,7 @@ export const LoginScreen = ({ navigation, route }: Props) => {
             setError('Too many login attempts. Please try again later.');
             break;
           default:
-            setError(err.message || 'Failed to login. Please try again.');
+            setError(getDisplayError(err, 'Failed to login. Please try again.'));
         }
       } else if (err.message === 'Network Error') {
         setError('Network error. Please check your connection and try again.');

@@ -20,6 +20,7 @@ import Constants from 'expo-constants';
 import Screen from 'components/Screen';
 import AppText from 'components/AppText';
 import AppStateStore from 'Store/AppStateStore';
+import { getDisplayError } from '~/utils/error';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Subscription'>;
 
@@ -141,7 +142,7 @@ export const SubscriptionScreen = ({ navigation }: Props) => {
       console.error('[Payment] Payment failed:', error);
       Alert.alert(
         'Payment Failed',
-        error instanceof Error ? error.message : 'Payment failed. Please try again.'
+        getDisplayError(error, 'Payment failed. Please try again.')
       );
     } finally {
       setIsLoading(false);

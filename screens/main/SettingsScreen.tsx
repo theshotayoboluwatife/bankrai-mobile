@@ -101,7 +101,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!user?.hasPaidAccess) return;
+    if (!user?.has_paid_access) return;
 
     Alert.alert(
       'Cancel Subscription',
@@ -377,7 +377,7 @@ export const SettingsScreen = ({ navigation }: Props) => {
 
           <View className="gap-y-4">
             {/* Unsubscribe */}
-            {user?.hasPaidAccess && Platform.OS !== 'ios' && (
+            {user?.has_paid_access && Platform.OS !== 'ios' && (
               <View className="border-b border-gray-200 pb-4 dark:border-gray-700">
                 <View className="flex-row items-center justify-between">
                   <View className="mr-3 flex-1">

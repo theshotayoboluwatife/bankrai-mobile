@@ -1,4 +1,5 @@
 import { api } from '../config/api';
+import { getDisplayError } from '~/utils/error';
 
 export interface Message {
   id: string;
@@ -32,9 +33,7 @@ export const chatService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to fetch chats. Please try again.'
+        getDisplayError(error, 'Failed to fetch chats. Please try again.')
       );
     }
   },
@@ -67,9 +66,7 @@ export const chatService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch chat. Please try again.'
+        getDisplayError(error, 'Failed to fetch chat. Please try again.')
       );
     }
   },
@@ -89,9 +86,7 @@ export const chatService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to create chat. Please try again.'
+        getDisplayError(error, 'Failed to create chat. Please try again.')
       );
     }
   },
@@ -108,9 +103,7 @@ export const chatService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to send message. Please try again.'
+        getDisplayError(error, 'Failed to send message. Please try again.')
       );
     }
   },
@@ -130,9 +123,7 @@ export const chatService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to refresh data. Please try again.'
+        getDisplayError(error, 'Failed to refresh data. Please try again.')
       );
     }
   }

@@ -37,6 +37,7 @@ import { adaptyService } from '../../services/adapty';
 import Screen from 'components/Screen';
 import AppText from 'components/AppText';
 import AppStateStore from 'Store/AppStateStore';
+import { getDisplayError } from '~/utils/error';
 
 type Props = NativeStackScreenProps<MainStackParamList, 'Chat'>;
 
@@ -393,7 +394,7 @@ const handleChatSelect = async (chatId: string) => {
       if (error.response?.status === 403 && error.response?.data?.error?.includes('free message limit')) {
         setShowSubscriptionOverlay(true);
       } else {
-        setError(error.response?.data?.error || 'Failed to send message. Please try again.');
+        setError(getDisplayError(error, 'Failed to send message. Please try again.'));
       }
     } finally {
       setIsSendingMessage(false);
@@ -575,7 +576,7 @@ const handleChatSelect = async (chatId: string) => {
           showNotification('Session expired. Please login again.', 'error');
           // You might want to navigate to login screen here
         } else {
-          showNotification(error.message || 'Failed to refresh user data', 'error');
+          showNotification(getDisplayError(error, 'Failed to refresh user data'), 'error');
         }
       } else {
         showNotification('Failed to refresh user data', 'error');

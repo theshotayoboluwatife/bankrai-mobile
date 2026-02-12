@@ -6,6 +6,7 @@ import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { authService } from '../../services/auth';
 import { useAuth } from '../../contexts/AuthContext';
+import { getDisplayError } from '~/utils/error';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Register'>;
 
@@ -69,7 +70,7 @@ export const RegisterScreen = ({ navigation }: Props) => {
       } else if (!err.message) {
         setError('Network error. Please check your connection and try again.');
       } else {
-        setError(err.message || 'Failed to create account. Please try again.');
+        setError(getDisplayError(err, 'Failed to create account. Please try again.'));
       }
     } finally {
       setIsLoading(false);

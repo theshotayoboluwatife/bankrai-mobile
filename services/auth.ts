@@ -1,5 +1,6 @@
 import { api } from '../config/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getDisplayError } from '~/utils/error';
 
 export interface LoginCredentials {
   email: string;
@@ -26,13 +27,16 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   plaidIntegration: PlaidIntegration | null;
-  hasPaidAccess: boolean;
-  messageCount: number;
+  has_paid_access: boolean;
+  message_count: number;
   subscription?: {
     id: string;
     status: string;
-    stripeSubscriptionId: string;
-    cancelAtPeriodEnd: boolean;
+    stripe_id: string;
+    stripe_customer_id: string;
+    stripe_price_id: string;
+    period_start: string | null;
+    period_end: string | null;
   } | null;
 }
 
@@ -66,9 +70,8 @@ export const authService = {
       console.error('Login error:', error.response?.status, error.response?.data, error.message);
 
       throw new Error(
-        error.response?.status ||
-        error.message ||
-        'Failed to login. Please check your credentials and try again.'
+        error.response?.status?.toString() ||
+        getDisplayError(error, 'Failed to login. Please check your credentials and try again.')
       );
     }
   },
@@ -91,9 +94,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to create account. Please try again.'
+        getDisplayError(error, 'Failed to create account. Please try again.')
       );
     }
   },
@@ -123,9 +124,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch profile. Please try again.'
+        getDisplayError(error, 'Failed to fetch profile. Please try again.')
       );
     }
   },
@@ -142,9 +141,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch user. Please try again.'
+        getDisplayError(error, 'Failed to fetch user. Please try again.')
       );
     }
   },
@@ -160,9 +157,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to delete account. Please try again.'
+        getDisplayError(error, 'Failed to delete account. Please try again.')
       );
     }
   },
@@ -179,9 +174,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch current user. Please try again.'
+        getDisplayError(error, 'Failed to fetch current user. Please try again.')
       );
     }
   },
@@ -198,9 +191,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to update user. Please try again.'
+        getDisplayError(error, 'Failed to update user. Please try again.')
       );
     }
   },
@@ -217,9 +208,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch Plaid data. Please try again.'
+        getDisplayError(error, 'Failed to fetch Plaid data. Please try again.')
       );
     }
   },
@@ -235,9 +224,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to disconnect Plaid. Please try again.'
+        getDisplayError(error, 'Failed to disconnect Plaid. Please try again.')
       );
     }
   },
@@ -255,9 +242,7 @@ export const authService = {
       });
 
       throw new Error(
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to cancel subscription. Please try again.'
+        getDisplayError(error, 'Failed to cancel subscription. Please try again.')
       );
     }
   },
@@ -277,9 +262,7 @@ export const authService = {
      });
 
      throw new Error(
-       error.response?.data?.message ||
-       error.message ||
-       'Failed to sync IAP subscription. Please try again.'
+       getDisplayError(error, 'Failed to sync IAP subscription. Please try again.')
      );
    }
  }

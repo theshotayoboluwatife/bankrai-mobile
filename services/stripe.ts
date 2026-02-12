@@ -1,4 +1,5 @@
 import { api } from '../config/api';
+import { getDisplayError } from '~/utils/error';
 
 export interface CheckoutSession {
   url: string;
@@ -6,14 +7,15 @@ export interface CheckoutSession {
 
 export interface Subscription {
   id: string;
-  userId: string;
-  stripeCustomerId: string;
-  stripePriceId: string;
-  stripeSubscriptionId: string;
-  status: 'active' | 'inactive' | 'canceled';
-  currentPeriodEnd: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  user_id: string;
+  stripe_id: string;
+  stripe_customer_id: string;
+  stripe_price_id: string;
+  status: 'active' | 'pending' | 'canceled' | 'unpaid';
+  period_start: string | null;
+  period_end: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Payment {
@@ -42,28 +44,27 @@ export const stripeService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to create checkout session. Please try again.'
+        getDisplayError(error, 'Failed to create checkout session. Please try again.')
       );
     }
   },
 
-  async getSubscription(): Promise<Subscription> {
+  async getSubscription(): Promise<Subscription | null> {
     try {
       const response = await api.get<Subscription>('/stripe/subscription');
       return response.data;
     } catch (error: any) {
+      if (error.response?.status === 404) {
+        return null;
+      }
       console.error('Get subscription error:', {
         status: error.response?.status,
         data: error.response?.data,
         message: error.message
       });
-      
+
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to get subscription. Please try again.'
+        getDisplayError(error, 'Failed to get subscription. Please try again.')
       );
     }
   },
@@ -79,29 +80,9 @@ export const stripeService = {
       });
       
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to cancel subscription. Please try again.'
+        getDisplayError(error, 'Failed to cancel subscription. Please try again.')
       );
     }
   },
 
-  async createPortalSession(): Promise<{ url: string }> {
-    try {
-      const response = await api.post<{ url: string }>('/stripe/create-portal-session');
-      return response.data;
-    } catch (error: any) {
-      console.error('Create portal session error:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      
-      throw new Error(
-        error.response?.data?.message || 
-        error.message || 
-        'Failed to create portal session. Please try again.'
-      );
-    }
-  }
 }; 

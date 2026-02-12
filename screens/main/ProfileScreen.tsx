@@ -83,7 +83,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
   };
 
   const handleCancelSubscription = async () => {
-    if (!user?.hasPaidAccess) return;
+    if (!user?.has_paid_access) return;
 
     Alert.alert(
       'Cancel Subscription',
@@ -238,7 +238,7 @@ export const ProfileScreen = ({ navigation }: Props) => {
             </TouchableOpacity>
           )}
 
-          {user?.hasPaidAccess && Platform.OS !== 'ios' && (
+          {user?.has_paid_access && Platform.OS !== 'ios' && (
             <TouchableOpacity
               className="flex-row items-center p-4 bg-white dark:bg-dark-surface rounded-lg border border-gray-200 dark:border-gray-700"
               onPress={handleCancelSubscription}

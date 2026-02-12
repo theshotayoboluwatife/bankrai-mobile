@@ -49,7 +49,7 @@ export const Paywall: React.FC<PaywallProps> = ({
 
         await refreshSubscription();
 
-       setHasActiveSubscription(user?.hasPaidAccess || isSubscribed);
+       setHasActiveSubscription(user?.has_paid_access || isSubscribed);
 
       } catch (error) {
         console.error('Failed to check subscription status:', error);
@@ -57,7 +57,7 @@ export const Paywall: React.FC<PaywallProps> = ({
       } finally {
         setIsCheckingSubscription(false);
       }
-    }, [user?.hasPaidAccess, isSubscribed, refreshSubscription]);
+    }, [user?.has_paid_access, isSubscribed, refreshSubscription]);
 
     const handleAdaptyPurchase = async () => {
       try {

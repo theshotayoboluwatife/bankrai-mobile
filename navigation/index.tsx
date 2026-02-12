@@ -1,4 +1,4 @@
-import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList, AuthStackParamList, MainStackParamList } from '../types/navigation';
 import { LoginScreen } from '../screens/auth/LoginScreen';
@@ -8,9 +8,9 @@ import { ChatScreen } from '../screens/main/ChatScreen';
 import { ProfileScreen } from '../screens/main/ProfileScreen';
 import { EditProfileScreen } from '../screens/main/EditProfileScreen';
 import { ChangePasswordScreen } from '../screens/main/ChangePasswordScreen';
-import { SubscriptionScreen } from '../screens/main/SubscriptionScreen'; // Add this import
+import { SubscriptionScreen } from '../screens/main/SubscriptionScreen';
 import { useAuth } from '../contexts/AuthContext';
-import { View, ActivityIndicator, Platform } from 'react-native';
+import { View, ActivityIndicator, Platform, Linking, Alert } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -19,6 +19,10 @@ import InsightsLandingScreen from 'screens/main/InsightsLandingScreen';
 import SettingsScreen from 'screens/main/SettingsScreen';
 import FinancialOverviewScreen from 'screens/main/FinancialOverviewScreen';
 import TabNavigation from './TabNavigation';
+import { useEffect } from 'react';
+
+const navigationRef = createNavigationContainerRef();
+
 const MainStack = createNativeStackNavigator<MainStackParamList>();
 
 // Create stack navigators
@@ -55,8 +59,43 @@ const MainNavigator = () => {
 
 // Root Navigator
 export const Navigation = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, refreshUser } = useAuth();
   const { darkMode } = AppStateStore();
+
+  useEffect(() => {
+    const handleDeepLink = async (event: { url: string }) => {
+      const { url } = event;
+      if (url === 'bankrai://payment/success') {
+        try {
+          await refreshUser();
+          // Navigate back to the Settings root so the user isn't stuck on the Subscription screen
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('Main' as never, {
+              screen: 'Settings',
+              params: { screen: 'SettingsMain' },
+            } as never);
+          }
+          Alert.alert('Payment Successful', 'Your subscription has been activated!');
+        } catch (error) {
+          console.error('[DeepLink] Failed to refresh user after payment:', error);
+        }
+      } else if (url === 'bankrai://payment/cancel') {
+        Alert.alert('Payment Canceled', 'Your payment was canceled. You can try again anytime.');
+      }
+    };
+
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Handle the case where the app was opened from a deep link while closed
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink({ url });
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshUser]);
+
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-background dark:bg-dark-background">
@@ -67,6 +106,7 @@ export const Navigation = () => {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={{
         ...DefaultTheme,
         colors: {
