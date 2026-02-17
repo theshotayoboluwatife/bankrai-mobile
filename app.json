@@ -40,7 +40,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.bankrai.mobile",
-      "versionCode": 1
+      "versionCode": 17
     },
     "extra": {
       "eas": {
